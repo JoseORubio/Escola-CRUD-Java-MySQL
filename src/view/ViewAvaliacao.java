@@ -19,8 +19,8 @@ public class ViewAvaliacao extends javax.swing.JFrame {
             + ViewLogin.usuSelecionado.getNome()
             + " - Modo: "
             + ViewLogin.usuSelecionado.getCargo()
-            + (ViewLogin.usuSelecionado.getCargo().equals("Professor")?" - " + ViewLogin.usuSelecionado.getLeciona(): "") 
-            + (ViewLogin.usuSelecionado.getCargo().equals("Coordenador")?" - " + ViewLogin.usuSelecionado.getCoordena() : "");
+            + (ViewLogin.usuSelecionado.getCargo().equals("Professor") ? " - " + ViewLogin.usuSelecionado.getLeciona() : "")
+            + (ViewLogin.usuSelecionado.getCargo().equals("Coordenador") ? " - " + ViewLogin.usuSelecionado.getCoordena() : "");
 
     AvaliacaoModel avaliacaoModel = new AvaliacaoModel();
     AvaliacaoController avaliacaoController = new AvaliacaoController();
@@ -37,7 +37,43 @@ public class ViewAvaliacao extends javax.swing.JFrame {
         initComponents();
         setLocationRelativeTo(null);
         carregarTabela("");
+        definirUsuario();
+    }
 
+    private void carregarTabela(String filtro) {
+        List<AvaliacaoModel> listaAvaliacoes;
+        String where = "";
+
+        if (ViewLogin.usuSelecionado.getCargo().equals("Professor")) {
+            where = "where f.nome = '" + ViewLogin.usuSelecionado.getNome() + "'";
+
+        } else if (ViewLogin.usuSelecionado.getCargo().equals("Aluno")) {
+            where = "where a.nome = '" + ViewLogin.usuSelecionado.getNome() + "'";
+
+        } else if (ViewLogin.usuSelecionado.getCargo().equals("Coordenador")) {
+            where = "join area_conhecimento ac on d.id_area_conhecimento = ac.id "
+                    + "where ac.nome = '" + ViewLogin.usuSelecionado.getCoordena() + "'";
+        }
+
+        listaAvaliacoes = avaliacaoController.getListaAvaliacoesController(where + filtro);
+        DefaultTableModel tabela = (DefaultTableModel) jTabela.getModel();
+        tabela.setNumRows(0);
+        for (int i = 0; i < listaAvaliacoes.size(); i++) {
+            tabela.addRow(new Object[]{
+                listaAvaliacoes.get(i).getNomeProfessor(),
+                listaAvaliacoes.get(i).getDisciplina(),
+                listaAvaliacoes.get(i).getNomeAluno(),
+                listaAvaliacoes.get(i).getAno(),
+                listaAvaliacoes.get(i).getTurma(),
+                String.format("%.1f", listaAvaliacoes.get(i).getBim1()),
+                String.format("%.1f", listaAvaliacoes.get(i).getBim2()),
+                String.format("%.1f", listaAvaliacoes.get(i).getBim3()),
+                String.format("%.1f", listaAvaliacoes.get(i).getBim4())
+            });
+        }
+    }
+
+    private void definirUsuario() {
         if (ViewLogin.usuSelecionado.getCargo().equals("Professor")) {
             jtfNomeProfessor.setText(ViewLogin.usuSelecionado.getNome());
             jbAlterar.setEnabled(true);
@@ -88,42 +124,6 @@ public class ViewAvaliacao extends javax.swing.JFrame {
         pesquisaFiltro();
         alunoId = 0;
         cadAlt = "cad";
-
-//        jtfNomeAluno.setText("");
-//        jbPesquisarAluno.setEnabled(true);
-    }
-
-    private void carregarTabela(String filtro) {
-        List<AvaliacaoModel> listaAvaliacoes;
-        String where = "";
-
-        if (ViewLogin.usuSelecionado.getCargo().equals("Professor")) {
-            where = "where f.nome = '" + ViewLogin.usuSelecionado.getNome() + "'";
-
-        } else if (ViewLogin.usuSelecionado.getCargo().equals("Aluno")) {
-            where = "where a.nome = '" + ViewLogin.usuSelecionado.getNome() + "'";
-
-        } else if (ViewLogin.usuSelecionado.getCargo().equals("Coordenador")) {
-            where = "join area_conhecimento ac on d.id_area_conhecimento = ac.id "
-                    + "where ac.nome = '" + ViewLogin.usuSelecionado.getCoordena() + "'";
-        }
-
-        listaAvaliacoes = avaliacaoController.getListaAvaliacoesController(where + filtro);
-        DefaultTableModel tabela = (DefaultTableModel) jTabela.getModel();
-        tabela.setNumRows(0);
-        for (int i = 0; i < listaAvaliacoes.size(); i++) {
-            tabela.addRow(new Object[]{
-                listaAvaliacoes.get(i).getNomeProfessor(),
-                listaAvaliacoes.get(i).getDisciplina(),
-                listaAvaliacoes.get(i).getNomeAluno(),
-                listaAvaliacoes.get(i).getAno(),
-                listaAvaliacoes.get(i).getTurma(),
-                String.format("%.1f", listaAvaliacoes.get(i).getBim1()),
-                String.format("%.1f", listaAvaliacoes.get(i).getBim2()),
-                String.format("%.1f", listaAvaliacoes.get(i).getBim3()),
-                String.format("%.1f", listaAvaliacoes.get(i).getBim4())
-            });
-        }
     }
 
     private void carregarAlunos(String filtro) {
@@ -141,6 +141,14 @@ public class ViewAvaliacao extends javax.swing.JFrame {
                 });
             }
         }
+    }
+
+    private void pesquisarAluno() {
+        jfAlunos.setVisible(true);
+        jfAlunos.setSize(630, 530);
+        jfAlunos.setResizable(false);
+        jfAlunos.setLocationRelativeTo(null);
+        carregarAlunos(jtfNomeAluno.getText());
     }
 
     /**
@@ -338,11 +346,6 @@ public class ViewAvaliacao extends javax.swing.JFrame {
                 jbSalvarActionPerformed(evt);
             }
         });
-        jbSalvar.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
-                jbSalvarKeyPressed(evt);
-            }
-        });
 
         jbAlterar.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
         jbAlterar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagens/icons8-exchange-money-30.png"))); // NOI18N
@@ -420,11 +423,6 @@ public class ViewAvaliacao extends javax.swing.JFrame {
                 jtfNota2FocusLost(evt);
             }
         });
-        jtfNota2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jtfNota2ActionPerformed(evt);
-            }
-        });
         jtfNota2.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 jtfNota2KeyPressed(evt);
@@ -442,17 +440,9 @@ public class ViewAvaliacao extends javax.swing.JFrame {
                 jtfNota1FocusLost(evt);
             }
         });
-        jtfNota1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jtfNota1ActionPerformed(evt);
-            }
-        });
         jtfNota1.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
                 jtfNota1KeyPressed(evt);
-            }
-            public void keyReleased(java.awt.event.KeyEvent evt) {
-                jtfNota1KeyReleased(evt);
             }
         });
 
@@ -465,11 +455,6 @@ public class ViewAvaliacao extends javax.swing.JFrame {
             }
             public void focusLost(java.awt.event.FocusEvent evt) {
                 jtfNota3FocusLost(evt);
-            }
-        });
-        jtfNota3.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jtfNota3ActionPerformed(evt);
             }
         });
         jtfNota3.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -487,11 +472,6 @@ public class ViewAvaliacao extends javax.swing.JFrame {
             }
             public void focusLost(java.awt.event.FocusEvent evt) {
                 jtfNota4FocusLost(evt);
-            }
-        });
-        jtfNota4.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jtfNota4ActionPerformed(evt);
             }
         });
         jtfNota4.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -659,34 +639,10 @@ public class ViewAvaliacao extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jtfNota2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfNota2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jtfNota2ActionPerformed
-
-    private void jtfNota1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfNota1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jtfNota1ActionPerformed
-
-    private void jtfNota3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfNota3ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jtfNota3ActionPerformed
-
-    private void jtfNota4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfNota4ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jtfNota4ActionPerformed
-
     private void jbVoltarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbVoltarActionPerformed
         new ViewPrincipal().setVisible(true);
         this.dispose(); // TODO add your handling code here:
     }//GEN-LAST:event_jbVoltarActionPerformed
-
-    private void pesquisarAluno() {
-        jfAlunos.setVisible(true);
-        jfAlunos.setSize(630, 530);
-        jfAlunos.setResizable(false);
-        jfAlunos.setLocationRelativeTo(null);
-        carregarAlunos(jtfNomeAluno.getText());
-    }
 
     private void jbPesquisarAlunoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbPesquisarAlunoActionPerformed
         pesquisarAluno();
@@ -743,23 +699,6 @@ public class ViewAvaliacao extends javax.swing.JFrame {
 
     }//GEN-LAST:event_jbLimparActionPerformed
 
-    private boolean validaNotas(String nota) {
-        if (!nota.equals("")) {
-            try {
-                Double notaConvertida = Double.parseDouble(nota);
-                if (notaConvertida < 0 || notaConvertida > 10) {
-                    JOptionPane.showMessageDialog(this, "Digite uma nota entre 0 e 10.");
-                    return false;
-                }
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Digite um valor numérico entre 0 e 10.");
-                return false;
-            }
-        }
-        return true;
-    }
-
-
     private void jtfNota1FocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfNota1FocusLost
         String converteVirgula = jtfNota1.getText();
         converteVirgula = converteVirgula.replace(',', '.');
@@ -800,6 +739,22 @@ public class ViewAvaliacao extends javax.swing.JFrame {
         jbSalvar.setEnabled(true);
     }//GEN-LAST:event_jtfNota4FocusLost
 
+    private boolean validaNotas(String nota) {
+        if (!nota.equals("")) {
+            try {
+                Double notaConvertida = Double.parseDouble(nota);
+                if (notaConvertida < 0 || notaConvertida > 10) {
+                    JOptionPane.showMessageDialog(this, "Digite uma nota entre 0 e 10.");
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Digite um valor numérico entre 0 e 10.");
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void jbSalvarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSalvarActionPerformed
         avaliacaoModel = new AvaliacaoModel();
         avaliacaoModel.setIdProfessor(ViewLogin.usuSelecionado.getId());
@@ -815,14 +770,11 @@ public class ViewAvaliacao extends javax.swing.JFrame {
         if (!jtfNota4.getText().equals("")) {
             avaliacaoModel.setBim4(Double.parseDouble(jtfNota4.getText()));
         }
-        boolean salva = true;
+       
         if (jtfNomeAluno.getText().equals("")
                 || alunoId == 0) {
             JOptionPane.showMessageDialog(this, "Selecione um aluno para efetuar o cadastro.", "Erro", JOptionPane.ERROR_MESSAGE);
-            salva = false;
-        }
-
-        if (salva) {
+        } else {
             if (cadAlt.equals("cad")) {
                 avaliacaoModel.setIdAluno(alunoId);
                 String msgRetorno = avaliacaoController.salvarAvaliacaoController(avaliacaoModel);
@@ -832,6 +784,7 @@ public class ViewAvaliacao extends javax.swing.JFrame {
                     limparFormularios();
                 } else {
                     JOptionPane.showMessageDialog(this, msgRetorno + "\nCadastro não efetuado.", "Erro", JOptionPane.ERROR_MESSAGE);
+                    limparFormularios();
                 }
             } else {
                 List<AlunoModel> listaAluno;
@@ -848,7 +801,7 @@ public class ViewAvaliacao extends javax.swing.JFrame {
                     cadAlt = "cad";
                     jbExcluir.setEnabled(true);
                     jbPesquisarAluno.setEnabled(true);
-                    
+
                     limparFormularios();
                 } else {
                     JOptionPane.showMessageDialog(this, "Alteração não efetuada.", "Erro", JOptionPane.ERROR_MESSAGE);
@@ -873,18 +826,16 @@ public class ViewAvaliacao extends javax.swing.JFrame {
             jbExcluir.setEnabled(false);
             jbPesquisarAluno.setEnabled(false);
             jtfNomeAluno.setEditable(false);
-            alunoId=1;
+            alunoId = 1;
         }
     }//GEN-LAST:event_jbAlterarActionPerformed
 
     private void jtfNota1FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfNota1FocusGained
         jbSalvar.setEnabled(false);
-
     }//GEN-LAST:event_jtfNota1FocusGained
 
     private void jtfNota2FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfNota2FocusGained
         jbSalvar.setEnabled(false);
-// TODO add your handling code here:
     }//GEN-LAST:event_jtfNota2FocusGained
 
     private void jtfNota3FocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_jtfNota3FocusGained
@@ -895,9 +846,6 @@ public class ViewAvaliacao extends javax.swing.JFrame {
         jbSalvar.setEnabled(false);
     }//GEN-LAST:event_jtfNota4FocusGained
 
-    private void jtfNota1KeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jtfNota1KeyReleased
-    }//GEN-LAST:event_jtfNota1KeyReleased
-
     private void jtfNota1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jtfNota1KeyPressed
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             jbSalvar.requestFocus();
@@ -907,33 +855,21 @@ public class ViewAvaliacao extends javax.swing.JFrame {
     private void jtfNota2KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jtfNota2KeyPressed
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             jbSalvar.requestFocus();
-        }        // TODO add your handling code here:
+        }
     }//GEN-LAST:event_jtfNota2KeyPressed
 
     private void jtfNota3KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jtfNota3KeyPressed
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             jbSalvar.requestFocus();
-        }        // TODO add your handling code here:
+        }
     }//GEN-LAST:event_jtfNota3KeyPressed
 
     private void jtfNota4KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jtfNota4KeyPressed
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             jbSalvar.requestFocus();
-        }        // TODO add your handling code here:
+        }
     }//GEN-LAST:event_jtfNota4KeyPressed
 
-    private void jbSalvarKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jbSalvarKeyPressed
-
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jbSalvarKeyPressed
-
-    private void pesquisaFiltro() {
-        String filtro = "";
-        if (!jtfFiltroTabelaPrincipal.getText().equals("")) {
-            filtro = " " + "and (f.nome like '%" + jtfFiltroTabelaPrincipal.getText() + "%' or a.nome like '%" + jtfFiltroTabelaPrincipal.getText() + "%')";
-        }
-        carregarTabela(filtro);
-    }
 
     private void jbPesquisaFiltroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbPesquisaFiltroActionPerformed
         pesquisaFiltro();
@@ -945,12 +881,18 @@ public class ViewAvaliacao extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jtfFiltroTabelaPrincipalKeyPressed
 
+    private void pesquisaFiltro() {
+        String filtro = "";
+        if (!jtfFiltroTabelaPrincipal.getText().equals("")) {
+            filtro = " " + "and (f.nome like '%" + jtfFiltroTabelaPrincipal.getText() + "%' or a.nome like '%" + jtfFiltroTabelaPrincipal.getText() + "%')";
+        }
+        carregarTabela(filtro);
+    }
+
     private void jtfNomeAlunoKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jtfNomeAlunoKeyPressed
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
             pesquisarAluno();
         }
-
-        // TODO add your handling code here:
     }//GEN-LAST:event_jtfNomeAlunoKeyPressed
 
     /**

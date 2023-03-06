@@ -236,18 +236,10 @@ public class ViewClasse extends javax.swing.JFrame {
         classeModel.setAno((int) jsAno.getValue());
         String turma = (String) jcbTurma.getSelectedItem();
         classeModel.setTurma(turma.charAt(0));
-        List<ClasseModel> listaClasse = classeController.getListaClassesController();
-        boolean canSave = true;
 
-        for (ClasseModel c : listaClasse) {
-            if (classeModel.getAno() == c.getAno()
-                    && classeModel.getTurma() == c.getTurma()) {
-                canSave = false;
-                JOptionPane.showMessageDialog(this, "Classe já existente.\nCadastro não efetuado.", "Erro", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-
-        if (canSave) {
+        if (!validaClasse()) {
+            JOptionPane.showMessageDialog(this, "Classe já existente.\nCadastro não efetuado.", "Erro", JOptionPane.ERROR_MESSAGE);
+        } else{
             if (classeController.salvarClasseController(classeModel)) {
                 JOptionPane.showMessageDialog(this, "Cadastrado com sucesso.", "Atenção", JOptionPane.INFORMATION_MESSAGE);
                 carregarTabela();
@@ -256,6 +248,18 @@ public class ViewClasse extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_jbSalvarActionPerformed
+
+    private boolean validaClasse() {
+        boolean salvar = true;
+        List<ClasseModel> listaClasse = classeController.getListaClassesController();
+        for (ClasseModel c : listaClasse) {
+            if (classeModel.getAno() == c.getAno()
+                    && classeModel.getTurma() == c.getTurma()) {
+                salvar = false;
+            }
+        }
+        return salvar;
+    }
 
     private void jbVoltarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbVoltarActionPerformed
         new ViewPrincipal().setVisible(true);
@@ -267,13 +271,13 @@ public class ViewClasse extends javax.swing.JFrame {
         if (linha < 0) {
             JOptionPane.showMessageDialog(this, "Selecione uma classe para apagar.");
         } else {
-            if (JOptionPane.showConfirmDialog(this, "Deseja excluir a classe selecionada?","ATENÇÃO!",JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE) == 0) {
+            if (JOptionPane.showConfirmDialog(this, "Deseja excluir a classe selecionada?", "ATENÇÃO!", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == 0) {
                 int codigo = (int) jTabela.getValueAt(linha, 0);
                 if (classeController.excluirClasseController(codigo)) {
                     carregarTabela();
                     JOptionPane.showMessageDialog(this, "Classe excluída com sucesso.");
                 } else {
-                    JOptionPane.showMessageDialog(this, "Falha ao excluir.\nClasse relacionada a outro registro no sistema.", "Erro",  JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Falha ao excluir.\nClasse relacionada a outro registro no sistema.", "Erro", JOptionPane.ERROR_MESSAGE);
                 }
             }
         }

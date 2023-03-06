@@ -256,9 +256,6 @@
         <Component class="javax.swing.JTextField" name="jtfNome">
         </Component>
         <Component class="javax.swing.JTextField" name="jtfLogin">
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jtfLoginActionPerformed"/>
-          </Events>
         </Component>
         <Component class="javax.swing.JComboBox" name="jcbTurma">
           <AuxValues>

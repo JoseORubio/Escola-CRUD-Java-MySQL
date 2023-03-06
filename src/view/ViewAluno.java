@@ -45,7 +45,7 @@ public class ViewAluno extends javax.swing.JFrame {
 
         jsAno.setValue(1);
         jcbTurma.setModel(new javax.swing.DefaultComboBoxModel<>(listarTurma(filtrarClasses(listaClasses))));
-        
+
         InputMap inputMap = this.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "forward");
         this.getRootPane().setInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW, inputMap);
@@ -58,6 +58,24 @@ public class ViewAluno extends javax.swing.JFrame {
             }
 
         });
+    }
+
+    private void carregarTabela() {
+        List<AlunoModel> listaAluno;
+        listaAluno = alunoController.getListaAlunosController();
+        DefaultTableModel tabela = (DefaultTableModel) jTabela.getModel();
+        tabela.setNumRows(0);
+
+        for (int i = 0; i < listaAluno.size(); i++) {
+            tabela.addRow(new Object[]{
+                listaAluno.get(i).getId(),
+                listaAluno.get(i).getNome(),
+                listaAluno.get(i).getAno(),
+                listaAluno.get(i).getTurma(),
+                listaAluno.get(i).getLogin()
+            });
+        }
+
     }
 
     private List<ClasseModel> filtrarClasses(List<ClasseModel> listaClasses) {
@@ -86,25 +104,6 @@ public class ViewAluno extends javax.swing.JFrame {
         jtfNome.setText("");
         jtfLogin.setText("");
         jpfSenha.setText("");
-    }
-
-    private void carregarTabela() {
-        List<AlunoModel> listaAluno;
-        listaAluno = alunoController.getListaAlunosController();
-
-        DefaultTableModel tabela = (DefaultTableModel) jTabela.getModel();
-        tabela.setNumRows(0);
-
-        for (int i = 0; i < listaAluno.size(); i++) {
-            tabela.addRow(new Object[]{
-                listaAluno.get(i).getId(),
-                listaAluno.get(i).getNome(),
-                listaAluno.get(i).getAno(),
-                listaAluno.get(i).getTurma(),
-                listaAluno.get(i).getLogin()
-            });
-        }
-
     }
 
     /**
@@ -198,12 +197,6 @@ public class ViewAluno extends javax.swing.JFrame {
         jLabel7.setText("Senha");
 
         jtfId.setEditable(false);
-
-        jtfLogin.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jtfLoginActionPerformed(evt);
-            }
-        });
 
         jbSalvar.setFont(new java.awt.Font("Dialog", 1, 14)); // NOI18N
         jbSalvar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/imagens/icons8-mais-30.png"))); // NOI18N
@@ -355,30 +348,26 @@ public class ViewAluno extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jtfLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtfLoginActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jtfLoginActionPerformed
-
     private void jbVoltarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbVoltarActionPerformed
         new ViewPrincipal().setVisible(true);
-        this.dispose();       
+        this.dispose();
     }//GEN-LAST:event_jbVoltarActionPerformed
 
     private void jbExcluirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbExcluirActionPerformed
         int linha = jTabela.getSelectedRow();
         if (linha < 0) {
             JOptionPane.showMessageDialog(this, "Selecione um aluno para apagar.");
-        
+
         } else {
             if (JOptionPane.showConfirmDialog(this, "Deseja excluir o aluno selecionado?", "ATENÇÃO!", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) == 0) {
                 int codigo = (int) jTabela.getValueAt(linha, 0);
-                
+
                 if (alunoController.excluirAlunoController(codigo)) {
                     carregarTabela();
                     JOptionPane.showMessageDialog(this, "Aluno excluído com sucesso.");
-                
+
                 } else {
-                    JOptionPane.showMessageDialog(this, "Falha ao excluir.\nAluno relacionado a outro registro no sistema.", "Erro",  JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Falha ao excluir.\nAluno relacionado a outro registro no sistema.", "Erro", JOptionPane.ERROR_MESSAGE);
                 }
             }
         }
@@ -396,7 +385,6 @@ public class ViewAluno extends javax.swing.JFrame {
     }//GEN-LAST:event_jsAnoStateChanged
 
     private void jbSalvarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSalvarActionPerformed
-        boolean salva = true;
 
         alunoModel = new AlunoModel();
         alunoModel.setNome(jtfNome.getText());
@@ -410,28 +398,11 @@ public class ViewAluno extends javax.swing.JFrame {
             }
         }
 
-        List<String> listaLogins = loginController.listaLoginsController();
-        for (String login : listaLogins) {
-            if (alunoModel.getLogin().equalsIgnoreCase(login) && cadAlt.equals("cad")) {
-                salva = false;
-            
-            } else if (cadAlt.equals("alt")) {
-                if (!jTabela.getValueAt(jTabela.getSelectedRow(), 4).toString().equalsIgnoreCase(alunoModel.getLogin()) && alunoModel.getLogin().equalsIgnoreCase(login)) {
-                    salva = false;
-                }
-            }
-        }
-        if (!salva) {
+        if (!validaLogin()) {
             JOptionPane.showMessageDialog(this, "Login já utilizado.\nCadastro não efetuado.", "Erro", JOptionPane.ERROR_MESSAGE);
-        }
-        if (jtfNome.getText().equals("")
-                || jtfLogin.getText().equals("")
-                || jpfSenha.getText().equals("")) {
+        } else if (!validaCamposPreenchidos()) {
             JOptionPane.showMessageDialog(this, "Preencha todos os campos para efetuar o cadastro.", "Erro", JOptionPane.ERROR_MESSAGE);
-            salva = false;
-        }
-
-        if (salva) {
+        } else {
             if (cadAlt.equals("cad")) {
                 String msgRetorno = alunoController.salvarAlunoController(alunoModel);
                 if (msgRetorno.equals("")) {
@@ -441,7 +412,7 @@ public class ViewAluno extends javax.swing.JFrame {
                 } else {
                     JOptionPane.showMessageDialog(this, msgRetorno + "\nCadastro não efetuado.", "Erro", JOptionPane.ERROR_MESSAGE);
                 }
-            
+
             } else {
                 alunoModel.setId(Integer.parseInt(jtfId.getText()));
                 String msgRetorno = alunoController.atualizarAlunoController(alunoModel);
@@ -461,6 +432,32 @@ public class ViewAluno extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jbSalvarActionPerformed
 
+    private boolean validaLogin() {
+        boolean valida = true;
+        List<String> listaLogins = loginController.listaLoginsController();
+        for (String login : listaLogins) {
+            if (alunoModel.getLogin().equalsIgnoreCase(login) && cadAlt.equals("cad")) {
+                valida = false;
+
+            } else if (cadAlt.equals("alt")) {
+                if (!jTabela.getValueAt(jTabela.getSelectedRow(), 4).toString().equalsIgnoreCase(alunoModel.getLogin()) && alunoModel.getLogin().equalsIgnoreCase(login)) {
+                    valida = false;
+                }
+            }
+        }
+        return valida;
+    }
+
+    private boolean validaCamposPreenchidos() {
+        if (jtfNome.getText().equals("")
+                || jtfLogin.getText().equals("")
+                || jpfSenha.getText().equals("")) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     private void jbAlterarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbAlterarActionPerformed
         cadAlt = "alt";
         int linha = jTabela.getSelectedRow();
@@ -473,17 +470,21 @@ public class ViewAluno extends javax.swing.JFrame {
             jcbTurma.setSelectedItem(jTabela.getValueAt(linha, 3).toString());
             jtfLogin.setText(jTabela.getValueAt(linha, 4).toString());
 
-            List<AlunoModel> listaAluno;
-            listaAluno = alunoController.getListaAlunosController();
-            for (int i = 0; i < listaAluno.size(); i++) {
-                if ((int) jTabela.getValueAt(linha, 0) == listaAluno.get(i).getId()) {
-                    jpfSenha.setText(listaAluno.get(i).getSenha());
-                }
-            }
+            carregarSenhaAluno(linha);
+
             jbExcluir.setEnabled(false);
             jTabela.setEnabled(false);
         }
     }//GEN-LAST:event_jbAlterarActionPerformed
+    private void carregarSenhaAluno(int linha) {
+        List<AlunoModel> listaAluno;
+        listaAluno = alunoController.getListaAlunosController();
+        for (int i = 0; i < listaAluno.size(); i++) {
+            if ((int) jTabela.getValueAt(linha, 0) == listaAluno.get(i).getId()) {
+                jpfSenha.setText(listaAluno.get(i).getSenha());
+            }
+        }
+    }
 
     /**
      * @param args the command line arguments

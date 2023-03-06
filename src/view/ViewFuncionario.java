@@ -45,18 +45,7 @@ public class ViewFuncionario extends javax.swing.JFrame {
         initComponents();
         setLocationRelativeTo(null);
         carregarTabela();
-
-        String[] disciplinas = new String[listaDisciplinas.size()];
-        for (int i = 0; i < listaDisciplinas.size(); i++) {
-            disciplinas[i] = listaDisciplinas.get(i).getNome();
-        }
-        jcbLeciona.setModel(new javax.swing.DefaultComboBoxModel<>(disciplinas));
-
-        String[] areas_conhecimento = new String[listaAC.size()];
-        for (int i = 0; i < listaAC.size(); i++) {
-            areas_conhecimento[i] = listaAC.get(i).getNome();
-        }
-        jcbCoordena.setModel(new javax.swing.DefaultComboBoxModel<>(areas_conhecimento));
+        carregarComboBox();
 
         InputMap inputMap = this.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "forward");
@@ -71,6 +60,20 @@ public class ViewFuncionario extends javax.swing.JFrame {
 
         });
 
+    }
+
+    private void carregarComboBox() {
+        String[] disciplinas = new String[listaDisciplinas.size()];
+        for (int i = 0; i < listaDisciplinas.size(); i++) {
+            disciplinas[i] = listaDisciplinas.get(i).getNome();
+        }
+        jcbLeciona.setModel(new javax.swing.DefaultComboBoxModel<>(disciplinas));
+
+        String[] areas_conhecimento = new String[listaAC.size()];
+        for (int i = 0; i < listaAC.size(); i++) {
+            areas_conhecimento[i] = listaAC.get(i).getNome();
+        }
+        jcbCoordena.setModel(new javax.swing.DefaultComboBoxModel<>(areas_conhecimento));
     }
 
     private void limparFormularios() {
@@ -380,7 +383,7 @@ public class ViewFuncionario extends javax.swing.JFrame {
 
     private void jbVoltarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbVoltarActionPerformed
         new ViewPrincipal().setVisible(true);
-        this.dispose();        
+        this.dispose();
     }//GEN-LAST:event_jbVoltarActionPerformed
 
     private void jbExcluirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbExcluirActionPerformed
@@ -420,7 +423,6 @@ public class ViewFuncionario extends javax.swing.JFrame {
     }//GEN-LAST:event_jcbCargoActionPerformed
 
     private void jbSalvarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSalvarActionPerformed
-        boolean salva = true;
 
         funcionarioModel = new FuncionarioModel();
         funcionarioModel.setNome(jtfNome.getText());
@@ -444,29 +446,11 @@ public class ViewFuncionario extends javax.swing.JFrame {
             }
         }
 
-        List<String> listaLogins = loginController.listaLoginsController();
-
-        for (String login : listaLogins) {
-            if (funcionarioModel.getLogin().equalsIgnoreCase(login) && cadAlt.equals("cad")) {
-                salva = false;
-            } else if (cadAlt.equals("alt")) {
-                if (!jTabela.getValueAt(jTabela.getSelectedRow(), 3).toString().equalsIgnoreCase(funcionarioModel.getLogin()) && funcionarioModel.getLogin().equalsIgnoreCase(login)) {
-                    salva = false;
-                }
-            }
-        }
-        if (!salva) {
+        if (!validaLogin()) {
             JOptionPane.showMessageDialog(this, "Login já utilizado.\nCadastro não efetuado.", "Erro", JOptionPane.ERROR_MESSAGE);
-        }
-        
-        if (jtfNome.getText().equals("")
-                || jtfLogin.getText().equals("")
-                || jpfSenha.getText().equals("")) {
+        } else if (!validaCamposPreenchidos()) {
             JOptionPane.showMessageDialog(this, "Preencha todos os campos para efetuar o cadastro.", "Erro", JOptionPane.ERROR_MESSAGE);
-            salva = false;
-        }
-
-        if (salva) {
+        } else {
             if (cadAlt.equals("cad")) {
                 String msgRetorno = funcionarioController.salvarFuncionarioController(funcionarioModel);
                 if (msgRetorno.equals("")) {
@@ -493,6 +477,31 @@ public class ViewFuncionario extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jbSalvarActionPerformed
 
+    private boolean validaLogin() {
+        List<String> listaLogins = loginController.listaLoginsController();
+        boolean salva = true;
+        for (String login : listaLogins) {
+            if (funcionarioModel.getLogin().equalsIgnoreCase(login) && cadAlt.equals("cad")) {
+                salva = false;
+            } else if (cadAlt.equals("alt")) {
+                if (!jTabela.getValueAt(jTabela.getSelectedRow(), 3).toString().equalsIgnoreCase(funcionarioModel.getLogin()) && funcionarioModel.getLogin().equalsIgnoreCase(login)) {
+                    salva = false;
+                }
+            }
+        }
+        return salva;
+    }
+
+    private boolean validaCamposPreenchidos() {
+        if (jtfNome.getText().equals("")
+                || jtfLogin.getText().equals("")
+                || jpfSenha.getText().equals("")) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
     private void jbLimparActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbLimparActionPerformed
         limparFormularios();
         cadAlt = "cad";
@@ -518,20 +527,24 @@ public class ViewFuncionario extends javax.swing.JFrame {
             if (jcbCoordena.isEnabled()) {
                 jcbCoordena.setSelectedItem(jTabela.getValueAt(linha, 5).toString());
             }
-
-            List<FuncionarioModel> listaFuncionario;
-            listaFuncionario = funcionarioController.getListaFuncionariosController();
-            for (int i = 0; i < listaFuncionario.size(); i++) {
-                if ((int) jTabela.getValueAt(linha, 0) == listaFuncionario.get(i).getId()) {
-                    jpfSenha.setText(listaFuncionario.get(i).getSenha());
-                }
-            }
+            carregarSenhaFuncionario(linha);
+            
             jbExcluir.setEnabled(false);
             jTabela.setEnabled(false);
         }
 
     }//GEN-LAST:event_jbAlterarActionPerformed
 
+    private void carregarSenhaFuncionario(int linha){
+        List<FuncionarioModel> listaFuncionario;
+            listaFuncionario = funcionarioController.getListaFuncionariosController();
+            for (int i = 0; i < listaFuncionario.size(); i++) {
+                if ((int) jTabela.getValueAt(linha, 0) == listaFuncionario.get(i).getId()) {
+                    jpfSenha.setText(listaFuncionario.get(i).getSenha());
+                }
+            }
+    }
+    
     /**
      * @param args the command line arguments
      */

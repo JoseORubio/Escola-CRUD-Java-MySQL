@@ -24,7 +24,7 @@ public class ViewDisciplina extends javax.swing.JFrame {
             + ViewLogin.usuSelecionado.getNome()
             + " - Modo: "
             + ViewLogin.usuSelecionado.getCargo()
-            + (ViewLogin.usuSelecionado.getCargo().equals("Coordenador")?" - " + ViewLogin.usuSelecionado.getCoordena() : "");
+            + (ViewLogin.usuSelecionado.getCargo().equals("Coordenador") ? " - " + ViewLogin.usuSelecionado.getCoordena() : "");
 
     Disciplina_AreaConhecimentoController disciplinaController = new Disciplina_AreaConhecimentoController();
     DisciplinaModel disciplinaModel = new DisciplinaModel();
@@ -39,17 +39,7 @@ public class ViewDisciplina extends javax.swing.JFrame {
         initComponents();
         setLocationRelativeTo(null);
         carregarTabela();
-
-        if (ViewLogin.usuSelecionado.getCargo().equals("Coordenador")) {
-            String[] listaComboBox = {ViewLogin.usuSelecionado.getCoordena()};
-            jcbACon.setModel(new javax.swing.DefaultComboBoxModel<>(listaComboBox));
-        } else {
-            String[] listaComboBox = new String[listaAreaConhecimento.size()];
-            for (int i = 0; i < listaAreaConhecimento.size(); i++) {
-                listaComboBox[i] = listaAreaConhecimento.get(i).getNome();
-            }
-            jcbACon.setModel(new javax.swing.DefaultComboBoxModel<>(listaComboBox));
-        }
+        carregarComboBox();
 
         InputMap inputMap = this.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "forward");
@@ -65,6 +55,19 @@ public class ViewDisciplina extends javax.swing.JFrame {
             }
 
         });
+    }
+
+    private void carregarComboBox() {
+        if (ViewLogin.usuSelecionado.getCargo().equals("Coordenador")) {
+            String[] listaComboBox = {ViewLogin.usuSelecionado.getCoordena()};
+            jcbACon.setModel(new javax.swing.DefaultComboBoxModel<>(listaComboBox));
+        } else {
+            String[] listaComboBox = new String[listaAreaConhecimento.size()];
+            for (int i = 0; i < listaAreaConhecimento.size(); i++) {
+                listaComboBox[i] = listaAreaConhecimento.get(i).getNome();
+            }
+            jcbACon.setModel(new javax.swing.DefaultComboBoxModel<>(listaComboBox));
+        }
     }
 
     private void limparFormularios() {
@@ -321,62 +324,61 @@ public class ViewDisciplina extends javax.swing.JFrame {
     private void jbSalvarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSalvarActionPerformed
         disciplinaModel = new DisciplinaModel();
         disciplinaModel.setNome(jtfNome.getText());
-        boolean salvar = true;
         for (AreaConhecimentoModel a : listaAreaConhecimento) {
-            if (a.getNome().equals( jcbACon.getSelectedItem().toString())) {
+            if (a.getNome().equals(jcbACon.getSelectedItem().toString())) {
                 disciplinaModel.setIdAreaConhecimento(a.getId());
             }
         }
 
         if (jtfNome.getText().equals("")) {
             JOptionPane.showMessageDialog(this, "Preencha o nome para efetuar o cadastro.", "Erro", JOptionPane.ERROR_MESSAGE);
-        } else {
-            List<DisciplinaModel> listaDisciplina = disciplinaController.getListaDisciplinasController("");
-            
-            for (DisciplinaModel disciplina : listaDisciplina) {
-                if (disciplina.getNome().equalsIgnoreCase(jtfNome.getText())) {
-                    salvar = false;
-                    if (cadAlt.equals("alt")) {
-                        if (jTabela.getValueAt(jTabela.getSelectedRow(), 1).toString().equalsIgnoreCase(disciplinaModel.getNome())) {
-                            salvar = true;
-                        }
-                    }
-                }
+        } else if (!validaNomeDisciplina()) {
+            JOptionPane.showMessageDialog(this, "Nome já utilizado.\nCadastro não efetuado.", "Erro", JOptionPane.ERROR_MESSAGE);
+        } else if (cadAlt.equals("cad")) {
 
-            }
-
-            if (!salvar) {
-                JOptionPane.showMessageDialog(this, "Nome já utilizado.\nCadastro não efetuado.", "Erro", JOptionPane.ERROR_MESSAGE);
-            } else if (cadAlt.equals("cad")) {
-
-                if (disciplinaController.salvarDisciplinaController(disciplinaModel)) {
-                    JOptionPane.showMessageDialog(this, "Cadastrado com sucesso.", "Atenção", JOptionPane.INFORMATION_MESSAGE);
-                    carregarTabela();
-                    limparFormularios();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Cadastro não efetuado.", "Erro", JOptionPane.ERROR_MESSAGE);
-                }
+            if (disciplinaController.salvarDisciplinaController(disciplinaModel)) {
+                JOptionPane.showMessageDialog(this, "Cadastrado com sucesso.", "Atenção", JOptionPane.INFORMATION_MESSAGE);
+                carregarTabela();
+                limparFormularios();
             } else {
-                disciplinaModel.setId(Integer.parseInt(jtfId.getText()));
-                if (disciplinaController.atualizarDisciplinaController(disciplinaModel)) {
-                    JOptionPane.showMessageDialog(this, "Alterado com sucesso.", "Atenção", JOptionPane.INFORMATION_MESSAGE);
-                    carregarTabela();
-                    cadAlt = "cad";
-                    jbExcluir.setEnabled(true);
-                    jTabela.setEnabled(true);
-                    limparFormularios();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Alteração não efetuada.", "Erro", JOptionPane.ERROR_MESSAGE);
-                }
-
+                JOptionPane.showMessageDialog(this, "Cadastro não efetuado.", "Erro", JOptionPane.ERROR_MESSAGE);
             }
+        } else {
+            disciplinaModel.setId(Integer.parseInt(jtfId.getText()));
+            if (disciplinaController.atualizarDisciplinaController(disciplinaModel)) {
+                JOptionPane.showMessageDialog(this, "Alterado com sucesso.", "Atenção", JOptionPane.INFORMATION_MESSAGE);
+                carregarTabela();
+                cadAlt = "cad";
+                jbExcluir.setEnabled(true);
+                jTabela.setEnabled(true);
+                limparFormularios();
+            } else {
+                JOptionPane.showMessageDialog(this, "Alteração não efetuada.", "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+
         }
+
     }//GEN-LAST:event_jbSalvarActionPerformed
 
+    private boolean validaNomeDisciplina() {
+        boolean salvar = true;
+        List<DisciplinaModel> listaDisciplina = disciplinaController.getListaDisciplinasController("");
+        for (DisciplinaModel disciplina : listaDisciplina) {
+            if (disciplina.getNome().equalsIgnoreCase(jtfNome.getText())) {
+                salvar = false;
+                if (cadAlt.equals("alt")) {
+                    if (jTabela.getValueAt(jTabela.getSelectedRow(), 1).toString().equalsIgnoreCase(disciplinaModel.getNome())) {
+                        salvar = true;
+                    }
+                }
+            }
+        }
+        return salvar;
+    }
     private void jbAlterarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbAlterarActionPerformed
         cadAlt = "alt";
         int linha = jTabela.getSelectedRow();
-        
+
         if (linha < 0) {
             JOptionPane.showMessageDialog(this, "Selecione uma disciplina para alterar.");
         } else {
