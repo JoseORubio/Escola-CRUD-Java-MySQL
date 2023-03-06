@@ -12,8 +12,8 @@ public class ViewPrincipal extends javax.swing.JFrame {
             + ViewLogin.usuSelecionado.getNome()
             + " - Modo: "
             + ViewLogin.usuSelecionado.getCargo()
-            + (ViewLogin.usuSelecionado.getCargo().equals("Professor")?" - " + ViewLogin.usuSelecionado.getLeciona(): "") 
-            + (ViewLogin.usuSelecionado.getCargo().equals("Coordenador")?" - " + ViewLogin.usuSelecionado.getCoordena() : "");
+            + (ViewLogin.usuSelecionado.getCargo().equals("Professor") ? " - " + ViewLogin.usuSelecionado.getLeciona() : "")
+            + (ViewLogin.usuSelecionado.getCargo().equals("Coordenador") ? " - " + ViewLogin.usuSelecionado.getCoordena() : "");
 
     /**
      * Creates new form ViewPrincipal
@@ -21,7 +21,12 @@ public class ViewPrincipal extends javax.swing.JFrame {
     public ViewPrincipal() {
         initComponents();
         setLocationRelativeTo(null);
+        posicionarBotoes();
+        definirUsuario();
 
+    }
+
+    private void posicionarBotoes() {
         jbAlunos.setVerticalTextPosition(SwingConstants.BOTTOM);
         jbAlunos.setHorizontalTextPosition(SwingConstants.CENTER);
         jbAvaliacoes.setVerticalTextPosition(SwingConstants.BOTTOM);
@@ -34,7 +39,9 @@ public class ViewPrincipal extends javax.swing.JFrame {
         jbFuncionarios.setHorizontalTextPosition(SwingConstants.CENTER);
         jbSair.setVerticalTextPosition(SwingConstants.BOTTOM);
         jbSair.setHorizontalTextPosition(SwingConstants.CENTER);
+    }
 
+    private void definirUsuario() {
         if (ViewLogin.usuSelecionado.getCargo().equals("Aluno")) {
             jbAlunos.setEnabled(false);
             jbAvaliacoes.setEnabled(true);
@@ -58,7 +65,6 @@ public class ViewPrincipal extends javax.swing.JFrame {
             jbDisciplinas.setEnabled(false);
             jbFuncionarios.setEnabled(false);
         }
-
     }
 
     /**
